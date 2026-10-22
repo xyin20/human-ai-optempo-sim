@@ -1,4 +1,4 @@
-// OP-TEMPO pooled pipeline in JS (matches sim/optempo.py).
+// Pooled signal analysis in JS (matches the simulation implementation).
 const Pipe = (() => {
   function unpack2(b64, n) {
     const bin = atob(b64);
@@ -84,7 +84,7 @@ const Pipe = (() => {
     return Math.log2(n) - s / n;
   }
 
-  // OP-TEMPO windowed_entropy_forward: value at t uses seq[t-w..t-1]; first w values 0.
+  // Forward windowed entropy: value at t uses seq[t-w..t-1]; first w values 0.
   function windowedEntropy(seq, w) {
     const T = seq.length, out = new Float64Array(T);
     const m = new Map(); let S = 0;

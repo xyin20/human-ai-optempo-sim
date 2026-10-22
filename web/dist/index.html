@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="An interactive simulation of human–AI team adaptation, with a tiny language model and the OP-TEMPO pooled signal pipeline.">
-<title>Human–AI OP-TEMPO Walkthrough</title>
+<meta name="description" content="An interactive simulation of human–AI teaming, with a tiny language model and pooled physiological and AI signals.">
+<title>Human–AI Teaming</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap">
@@ -180,8 +180,8 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; 
 <div class="wrap">
   <header class="hero">
     <p class="eyebrow">Companion to the lightning talk · Measuring mutual adaptation as one human–AI system</p>
-    <h1>Human–AI OP-TEMPO Walkthrough</h1>
-    <p class="lede">Four people wear nine physiological sensors. A tiny language model reads their radio chat and answers. The OP-TEMPO pooled pipeline turns everyone’s signals into team states and asks one question: when do the people and the AI start behaving like one system?</p>
+    <h1>Human–AI Teaming</h1>
+    <p class="lede">Four people wear nine physiological sensors. A tiny language model reads their radio chat and answers. A pooled analysis turns everyone’s signals into team states and asks one question: when do the people and the AI start behaving like one system?</p>
     <p class="note-sim">Everything on this page is simulated. The human signals come from a model of workload and engagement; the AI signals come from real forward passes of a 125k-parameter transformer on the simulated chat. Coupling strengths were chosen to demonstrate the pipeline, so the numbers are not empirical findings.</p>
     <div class="phases" id="phase-cards"></div>
   </header>
@@ -210,7 +210,7 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; 
 
   <section class="step" id="signals">
     <div class="step-head"><span class="step-num">2</span><h2>Two kinds of signals</h2></div>
-    <div class="prose"><p>Each person has the nine OP-TEMPO sensors at 1 Hz: interbeat interval, respiration and pupil (autonomic), and EEG delta, theta, alpha, beta plus fNIRS HbO and HbR (neural). The AI gets its own sensors, read from the model every second: what each of its eight attention heads is doing, and how surprised, uncertain and busy the model is.</p></div>
+    <div class="prose"><p>Each person has nine physiological sensors sampled at 1 Hz: interbeat interval, respiration and pupil (autonomic), and EEG delta, theta, alpha, beta plus fNIRS HbO and HbR (neural). The AI gets its own sensors, read from the model every second: what each of its eight attention heads is doing, and how surprised, uncertain and busy the model is.</p></div>
     <div class="panel">
       <div class="controls">
         <h3 style="margin-right:auto">People</h3>
@@ -262,7 +262,7 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; 
   <section class="step" id="pool">
     <div class="step-head"><span class="step-num">4</span><h2>Symbolize, pool, concatenate</h2></div>
     <div class="prose">
-      <p>Each member’s signal becomes a quartile symbol (0–3) within that member’s own distribution, so “high” means high for that person. Then OP-TEMPO pools across members inside each sensor. The people are pooled across the four humans; the AI is pooled across its eight attention heads, which play the part of members. The pooled sensor values are concatenated into one state label for the team, one for the AI, and one for the whole human–AI system.</p>
+      <p>Each member’s signal becomes a quartile symbol (0–3) within that member’s own distribution, so “high” means high for that person. Next, signals are pooled across members within each sensor. The people are pooled across the four humans; the AI is pooled across its eight attention heads, which play the part of members. The pooled sensor values are concatenated into one state label for the team, one for the AI, and one for the whole human–AI system.</p>
     </div>
     <div class="panel">
       <div class="controls">
@@ -281,7 +281,7 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; 
   <section class="step" id="measure">
     <div class="step-head"><span class="step-num">5</span><h2>Three pools, one system</h2></div>
     <div class="prose">
-      <p>OP-TEMPO computes Shannon entropy of the pooled states in a sliding window, smooths it over 200 s, and drops the first 159 s. Doing that for the people, the AI and the concatenated system gives three entropies. If the people and the AI were independent, the system’s entropy would equal the sum of the two parts. The shortfall is the information they share:</p>
+      <p>The analysis computes Shannon entropy of the pooled states in a sliding window, smooths it over 200 s, and drops the first 159 s. Doing that for the people, the AI and the concatenated system gives three entropies. If the people and the AI were independent, the system’s entropy would equal the sum of the two parts. The shortfall is the information they share:</p>
       <div class="formula">I = <span class="h">H(people)</span> + <span class="a">H(AI)</span> − <span class="s">H(people ⊕ AI)</span></div>
       <p>Finite samples inflate that number, so each estimate is compared with surrogates that circularly shift the AI’s stream within the phase. That keeps each stream’s own rhythm and breaks only their timing together.</p>
     </div>
@@ -304,7 +304,7 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; 
       <h3>Over time · 10-minute sliding window</h3>
       <div class="chart" id="chart-tc" role="img" aria-label="Shared information over time with surrogate band"></div>
       <div class="legend" id="legend-tc"></div>
-      <p class="muted" style="font-size:14px">The coupling in this simulation is slow, so it shows best in long windows. The 30-second windows OP-TEMPO uses for entropy pick up mostly fast fluctuations.</p>
+      <p class="muted" style="font-size:14px">The coupling in this simulation is slow, so it shows best in long windows. The 30-second windows used for entropy pick up mostly fast fluctuations.</p>
     </div>
   </section>
 
@@ -339,11 +339,11 @@ footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; 
       <div class="prose muted" style="font-size:15px">
         <p>Simulated data with chosen coupling strengths; the demo shows that the pipeline can see coupling, not how strong it is in real teams.</p>
         <p>Mutual information is statistical dependence. It is not causal influence or information flow.</p>
-        <p>The pooling rule and the window length change the answer, so both should be treated as a sensitivity analysis, as in OP-TEMPO.</p>
+        <p>The pooling rule and the window length change the answer, so both should be treated as a sensitivity analysis.</p>
       </div>
     </div>
     <footer>
-      <p>Simulation, model and pipeline port built for this talk. Pipeline rules follow the OP-TEMPO pooled analysis (quartile symbols, seven pooling rules, 30-s windows, 200-s smoothing).</p>
+      <p>Simulation, language model and signal analysis built for this demo. The analysis uses quartile symbols, seven pooling rules, 30-s windows and 200-s smoothing.</p>
       <p>Xiaoyun Yin · Arizona State University</p>
     </footer>
   </section>
@@ -470,7 +470,7 @@ const TinyLM = (() => {
 })();
 if (typeof module !== 'undefined') module.exports = TinyLM;
 </script>
-<script>// OP-TEMPO pooled pipeline in JS (matches sim/optempo.py).
+<script>// Pooled signal analysis in JS (matches the simulation implementation).
 const Pipe = (() => {
   function unpack2(b64, n) {
     const bin = atob(b64);
@@ -556,7 +556,7 @@ const Pipe = (() => {
     return Math.log2(n) - s / n;
   }
 
-  // OP-TEMPO windowed_entropy_forward: value at t uses seq[t-w..t-1]; first w values 0.
+  // Forward windowed entropy: value at t uses seq[t-w..t-1]; first w values 0.
   function windowedEntropy(seq, w) {
     const T = seq.length, out = new Float64Array(T);
     const m = new Map(); let S = 0;
