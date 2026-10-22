@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An interactive simulation of human–AI team adaptation, with a tiny language model and the OP-TEMPO pooled signal pipeline.">
+<title>Human–AI OP-TEMPO Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap">
+<style>
+/* Layout: one reading column of numbered pipeline steps; each step pairs a short explanation with an instrument panel. Human = orange, AI = violet, human–AI system = rose. */
+:root {
+  --bg: #f3f4f9;
+  --panel: #ffffff;
+  --panel-2: #eceef6;
+  --ink: #1b1b47;
+  --muted: #565a7c;
+  --line: #d9dbe9;
+  --human: #c4521b;
+  --ai: #6a3fa6;
+  --system: #b02f59;
+  --chance: #8e91ad;
+  --band-1: rgba(27, 27, 71, 0.035);
+  --band-2: rgba(106, 63, 166, 0.075);
+  --band-3: rgba(176, 47, 89, 0.08);
+  --r0: #c4521b;
+  --r1: #23799b;
+  --r2: #8f6b0e;
+  --r3: #4d7f31;
+  --q0: #e6e7f2;
+  --q1: #b7b5d9;
+  --q2: #7d6bbb;
+  --q3: #3b2a86;
+  --focus: #23799b;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", sans-serif;
+  --font-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --step: clamp(16px, 2.2vw, 17px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1030; --panel: #171941; --panel-2: #1f2250; --ink: #ecebfa; --muted: #a6a9cc; --line: #2d3066;
+    --human: #f39558; --ai: #b48ef2; --system: #f0739a; --chance: #7d81a8;
+    --band-1: rgba(236, 235, 250, 0.03); --band-2: rgba(180, 142, 242, 0.08); --band-3: rgba(240, 115, 154, 0.09);
+    --r0: #f39558; --r1: #5cc0e4; --r2: #e0b84a; --r3: #93c96e;
+    --q0: #262a5c; --q1: #4f4a8f; --q2: #8a72d6; --q3: #d7c9ff; --focus: #5cc0e4;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1030; --panel: #171941; --panel-2: #1f2250; --ink: #ecebfa; --muted: #a6a9cc; --line: #2d3066;
+  --human: #f39558; --ai: #b48ef2; --system: #f0739a; --chance: #7d81a8;
+  --band-1: rgba(236, 235, 250, 0.03); --band-2: rgba(180, 142, 242, 0.08); --band-3: rgba(240, 115, 154, 0.09);
+  --r0: #f39558; --r1: #5cc0e4; --r2: #e0b84a; --r3: #93c96e;
+  --q0: #262a5c; --q1: #4f4a8f; --q2: #8a72d6; --q3: #d7c9ff; --focus: #5cc0e4;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: var(--step); line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(34px, 6vw, 58px); line-height: 1.02; font-weight: 750; }
+h2 { font-size: clamp(25px, 3.6vw, 34px); line-height: 1.12; font-weight: 700; }
+h3 { font-size: 19px; font-weight: 650; }
+p { margin: 0; }
+.prose { max-width: 66ch; display: flex; flex-direction: column; gap: 12px; color: var(--ink); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header.hero { padding-top: 40px; display: flex; flex-direction: column; gap: 20px; }
+.hero .lede { font-size: clamp(17px, 2.3vw, 20px); max-width: 60ch; }
+.note-sim { font-size: 14px; color: var(--muted); border-left: 3px solid var(--system); padding: 2px 0 2px 12px; max-width: 70ch; }
+.phases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.phase-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.phase-card .t { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.phase-card b { font-family: var(--font-display); font-size: 18px; }
+.phase-card p { font-size: 14.5px; color: var(--muted); }
+.phase-card .flow { font-family: var(--font-mono); font-size: 13px; }
+@media (max-width: 640px) { .phases { grid-template-columns: 1fr; } }
+nav.steps { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+nav.steps ol { list-style: none; display: flex; gap: 6px; margin: 0; padding: 0; white-space: nowrap; }
+nav.steps a { display: inline-flex; gap: 6px; align-items: baseline; padding: 6px 10px; border-radius: 999px; color: var(--ink); text-decoration: none; font-size: 14px; border: 1px solid var(--line); background: var(--panel); }
+nav.steps a span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+nav.steps a:hover { border-color: var(--ink); }
+section.step { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 70px; }
+.step-head { display: flex; gap: 14px; align-items: baseline; }
+.step-num { font-family: var(--font-mono); font-size: 14px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; flex: none; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+label.ctl { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); }
+select, input[type="range"], textarea, button { font: inherit; color: var(--ink); }
+select { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-size: 14px; max-width: 100%; }
+button { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; font-size: 14px; cursor: pointer; }
+button:hover { border-color: var(--ink); }
+button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.chart { position: relative; width: 100%; min-width: 0; }
+.chart canvas { display: block; width: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.legend i.dash { background-image: linear-gradient(90deg, currentColor 60%, transparent 0); background-size: 6px 3px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.log { max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.log .row { display: grid; grid-template-columns: 52px 74px minmax(0, 1fr); gap: 10px; padding: 7px 2px; border-bottom: 1px solid var(--line); font-size: 14px; align-items: baseline; }
+.log .row .t { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); }
+.who { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.03em; }
+.log .row .msg { font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.stat { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.stat .v { font-family: var(--font-mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.stat .k { font-size: 12.5px; color: var(--muted); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+textarea { width: 100%; min-height: 110px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-family: var(--font-mono); font-size: 13.5px; resize: vertical; }
+.tokens { display: flex; flex-wrap: wrap; gap: 4px; }
+.tok { font-family: var(--font-mono); font-size: 13px; padding: 2px 5px; border-radius: 4px; border: 1px solid var(--line); position: relative; }
+.tok.human { border-bottom: 2px solid var(--human); }
+.tok.ai { border-bottom: 2px solid var(--ai); }
+.heads { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.heads button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 8px; min-width: 0; }
+.heads button .hn { font-family: var(--font-mono); font-size: 12.5px; }
+.heads button .hv { font-family: var(--font-mono); font-size: 11.5px; opacity: 0.8; }
+table.mini { border-collapse: collapse; font-size: 13.5px; width: 100%; }
+table.mini th, table.mini td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+table.mini td.n { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+table.mini th.n { text-align: right; }
+.scroll-x { overflow-x: auto; }
+.bars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.bar-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.bar-track { position: relative; height: 170px; }
+.bar-fill { position: absolute; left: 22%; right: 22%; bottom: 0; background: var(--system); border-radius: 4px 4px 0 0; }
+.bar-zero { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid var(--muted); }
+.zero-lab { position: absolute; left: 0; bottom: 2px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.bar-dot { position: absolute; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--ink); background: var(--panel); transform: translate(-50%, 50%); }
+.bar-val { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.bar-lab { font-size: 13.5px; color: var(--muted); }
+.formula { font-family: var(--font-mono); font-size: 14.5px; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; overflow-x: auto; white-space: nowrap; }
+.formula .h { color: var(--human); font-weight: 600; }
+.formula .a { color: var(--ai); font-weight: 600; }
+.formula .s { color: var(--system); font-weight: 600; }
+.grid-roles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .grid-roles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.role-card { background: var(--panel-2); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.mbars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; height: 110px; position: relative; }
+.mcol { position: relative; height: 100%; }
+.mbar { position: absolute; left: 15%; right: 15%; background: var(--system); border-radius: 3px 3px 0 0; }
+.mlab { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); text-align: center; }
+.mval { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; font-family: var(--font-mono); font-size: 12px; text-align: center; }
+.map { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .map { grid-template-columns: 1fr; } }
+.map .cell { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.map .cell b { font-family: var(--font-display); font-size: 18px; }
+.map .cell .m { font-family: var(--font-mono); font-size: 13px; color: var(--system); }
+.raster-wrap { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 4px 8px; align-items: center; }
+.raster-wrap .rl { font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+.raster-wrap canvas { width: 100%; height: 14px; display: block; image-rendering: pixelated; border-radius: 2px; }
+.qkey { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); align-items: center; }
+.qkey span { display: inline-flex; gap: 5px; align-items: center; }
+.qkey i { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+.counter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .counter-row { grid-template-columns: 1fr; } }
+.counter { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.counter .lab { font-size: 13px; color: var(--muted); }
+.counter .big { font-family: var(--font-mono); font-size: 22px; font-variant-numeric: tabular-nums; }
+.counter .sub { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.busy { opacity: 0.55; }
+footer { border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+@media (prefers-reduced-motion: no-preference) { .bar-fill, .mbar { transition: height 0.35s ease, bottom 0.35s ease; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Companion to the lightning talk · Measuring mutual adaptation as one human–AI system</p>
+    <h1>Human–AI OP-TEMPO Walkthrough</h1>
+    <p class="lede">Four people wear nine physiological sensors. A tiny language model reads their radio chat and answers. The OP-TEMPO pooled pipeline turns everyone’s signals into team states and asks one question: when do the people and the AI start behaving like one system?</p>
+    <p class="note-sim">Everything on this page is simulated. The human signals come from a model of workload and engagement; the AI signals come from real forward passes of a 125k-parameter transformer on the simulated chat. Coupling strengths were chosen to demonstrate the pipeline, so the numbers are not empirical findings.</p>
+    <div class="phases" id="phase-cards"></div>
+  </header>
+
+  <nav class="steps" aria-label="Pipeline steps">
+    <ol>
+      <li><a href="#session"><span>1</span>Session</a></li>
+      <li><a href="#signals"><span>2</span>Signals</a></li>
+      <li><a href="#model"><span>3</span>Inside the AI</a></li>
+      <li><a href="#pool"><span>4</span>Symbolize &amp; pool</a></li>
+      <li><a href="#measure"><span>5</span>Measure</a></li>
+      <li><a href="#person"><span>6</span>Person → system</a></li>
+      <li><a href="#meaning"><span>7</span>What it means</a></li>
+    </ol>
+  </nav>
+
+  <section class="step" id="session">
+    <div class="step-head"><span class="step-num">1</span><h2>The session</h2></div>
+    <div class="prose"><p>Four teammates, P1 to P4, share one radio channel for a 60-minute mission. Targets appear at random; people report them, request action, confirm and adjust, and the AI teammate answers requests. Under load, people send more messages, add urgency, and slip from short brevity codes into vague free-form text. That is the path from a person’s state into the AI.</p></div>
+    <div class="panel">
+      <div class="tabs" role="tablist" id="chat-tabs"></div>
+      <div class="stats" id="chat-stats"></div>
+      <div class="log" id="chat-log" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="step" id="signals">
+    <div class="step-head"><span class="step-num">2</span><h2>Two kinds of signals</h2></div>
+    <div class="prose"><p>Each person has the nine OP-TEMPO sensors at 1 Hz: interbeat interval, respiration and pupil (autonomic), and EEG delta, theta, alpha, beta plus fNIRS HbO and HbR (neural). The AI gets its own sensors, read from the model every second: what each of its eight attention heads is doing, and how surprised, uncertain and busy the model is.</p></div>
+    <div class="panel">
+      <div class="controls">
+        <h3 style="margin-right:auto">People</h3>
+        <label class="ctl" for="sig-sensor">Sensor <select id="sig-sensor"></select></label>
+      </div>
+      <div class="chart" id="chart-human" role="img" aria-label="Human sensor over the session"></div>
+      <div class="legend" id="legend-human"></div>
+    </div>
+    <div class="panel">
+      <div class="controls">
+        <h3 style="margin-right:auto">The AI</h3>
+        <label class="ctl" for="ai-sensor">Signal <select id="ai-sensor"></select></label>
+      </div>
+      <div class="chart" id="chart-ai" role="img" aria-label="AI signal over the session"></div>
+      <div class="legend" id="legend-ai"></div>
+    </div>
+  </section>
+
+  <section class="step" id="model">
+    <div class="step-head"><span class="step-num">3</span><h2>Inside the AI teammate</h2></div>
+    <div class="prose">
+      <p><b>TeamTalk-GPT</b> is a decoder-only transformer built for this demo: 2 layers × 4 attention heads, 64-token context, a 166-word radio vocabulary, 124,928 parameters, trained from scratch on synthetic team radio chat. It runs here in your browser. Edit the chat, then look at where each head points just before the AI answers.</p>
+    </div>
+    <div class="panel">
+      <div class="controls">
+        <span class="muted" style="font-size:14px">Examples</span>
+        <button type="button" data-ex="0">Brevity request</button>
+        <button type="button" data-ex="1">Vague request</button>
+        <button type="button" data-ex="2">Asking the AI</button>
+      </div>
+      <label for="lm-input" class="muted" style="font-size:14px">One message per line, as <span class="mono">role: text</span> (roles: p1, p2, p3, p4, ai)</label>
+      <textarea id="lm-input" spellcheck="false"></textarea>
+      <div class="controls">
+        <button type="button" class="primary" id="lm-run">Show attention</button>
+        <button type="button" id="lm-gen">Let the AI answer</button>
+        <span class="muted mono" id="lm-status" style="font-size:13px"></span>
+      </div>
+      <div id="lm-reply" class="formula" hidden></div>
+      <h3>Attention heads <span class="muted" style="font-size:14px;font-family:var(--font-body);font-weight:400">· pick one; shading = where it looks from the AI’s turn</span></h3>
+      <div class="heads" id="lm-heads"></div>
+      <div class="tokens" id="lm-tokens" aria-live="polite"></div>
+      <div class="two">
+        <div class="scroll-x"><table class="mini" id="lm-table"></table></div>
+        <div class="scroll-x"><table class="mini" id="lm-next"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="step" id="pool">
+    <div class="step-head"><span class="step-num">4</span><h2>Symbolize, pool, concatenate</h2></div>
+    <div class="prose">
+      <p>Each member’s signal becomes a quartile symbol (0–3) within that member’s own distribution, so “high” means high for that person. Then OP-TEMPO pools across members inside each sensor. The people are pooled across the four humans; the AI is pooled across its eight attention heads, which play the part of members. The pooled sensor values are concatenated into one state label for the team, one for the AI, and one for the whole human–AI system.</p>
+    </div>
+    <div class="panel">
+      <div class="controls">
+        <label class="ctl" for="pool-method">Pooling rule <select id="pool-method"></select></label>
+        <label class="ctl" for="pool-sensor">Sensor <select id="pool-sensor"></select></label>
+        <label class="ctl" for="pool-start">Window start <input type="range" id="pool-start" min="0" max="3300" step="30" value="2520"><span class="mono" id="pool-start-v"></span></label>
+      </div>
+      <div class="raster-wrap" id="raster"></div>
+      <div class="qkey"><span><i style="background:var(--q0)"></i>quartile 0</span><span><i style="background:var(--q1)"></i>1</span><span><i style="background:var(--q2)"></i>2 (high)</span><span><i style="background:var(--q3)"></i>3 (high)</span><span class="mono">5-minute window, one column per second</span></div>
+      <h3>How many distinct states?</h3>
+      <div class="counter-row" id="counters"></div>
+      <p class="muted" style="font-size:14px">Concatenating every raw symbol makes almost every second a new state, so short-window entropy sits at its ceiling and cannot move. Pooling first keeps states that recur.</p>
+    </div>
+  </section>
+
+  <section class="step" id="measure">
+    <div class="step-head"><span class="step-num">5</span><h2>Three pools, one system</h2></div>
+    <div class="prose">
+      <p>OP-TEMPO computes Shannon entropy of the pooled states in a sliding window, smooths it over 200 s, and drops the first 159 s. Doing that for the people, the AI and the concatenated system gives three entropies. If the people and the AI were independent, the system’s entropy would equal the sum of the two parts. The shortfall is the information they share:</p>
+      <div class="formula">I = <span class="h">H(people)</span> + <span class="a">H(AI)</span> − <span class="s">H(people ⊕ AI)</span></div>
+      <p>Finite samples inflate that number, so each estimate is compared with surrogates that circularly shift the AI’s stream within the phase. That keeps each stream’s own rhythm and breaks only their timing together.</p>
+    </div>
+    <div class="panel">
+      <div class="controls">
+        <label class="ctl" for="ent-win">Entropy window <input type="range" id="ent-win" min="10" max="300" step="10" value="30"><span class="mono" id="ent-win-v">30 s</span></label>
+      </div>
+      <div class="chart" id="chart-ent" role="img" aria-label="Windowed entropy of people, AI and system"></div>
+      <div class="legend" id="legend-ent"></div>
+    </div>
+    <div class="panel">
+      <div class="controls">
+        <h3 style="margin-right:auto">Shared information by phase</h3>
+        <label class="ctl" for="pair">Layers <select id="pair"></select></label>
+      </div>
+      <div class="bars" id="integ-bars"></div>
+      <p class="muted" style="font-size:14px" id="integ-note"></p>
+    </div>
+    <div class="panel">
+      <h3>Over time · 10-minute sliding window</h3>
+      <div class="chart" id="chart-tc" role="img" aria-label="Shared information over time with surrogate band"></div>
+      <div class="legend" id="legend-tc"></div>
+      <p class="muted" style="font-size:14px">The coupling in this simulation is slow, so it shows best in long windows. The 30-second windows OP-TEMPO uses for entropy pick up mostly fast fluctuations.</p>
+    </div>
+  </section>
+
+  <section class="step" id="person">
+    <div class="step-head"><span class="step-num">6</span><h2>A person’s signals carry the system</h2></div>
+    <div class="prose">
+      <p>Take one person’s own autonomic state (interbeat interval, respiration, pupil: high or low) and compare it with the AI’s pooled output state. None of that person’s data is in the AI’s stream. Any shared information above chance means the person’s physiology is carrying part of the AI’s state, and the other way round.</p>
+    </div>
+    <div class="panel">
+      <div class="grid-roles" id="role-bars"></div>
+      <p class="muted" style="font-size:14px" id="role-note"></p>
+    </div>
+    <div class="panel">
+      <h3>Where the AI’s attention goes</h3>
+      <div class="chart" id="chart-ra" role="img" aria-label="Share of the AI's attention on each person over the session"></div>
+      <div class="legend" id="legend-ra"></div>
+      <p class="muted" style="font-size:14px">The AI’s attention is itself a reading of each person: it turns on when the AI joins this team’s channel and grows as people talk to it.</p>
+    </div>
+  </section>
+
+  <section class="step" id="meaning">
+    <div class="step-head"><span class="step-num">7</span><h2>What this means for measuring mutual adaptation</h2></div>
+    <div class="prose"><p>The systematic review defines system-level mutual adaptation as reciprocal, dynamic and emergent change in the human–AI system that cannot be attributed to either agent alone, unfolding at several levels. Each part of that definition maps to something this pipeline can measure.</p></div>
+    <div class="map">
+      <div class="cell"><b>Emergent</b><span class="m">I = H(people) + H(AI) − H(system) above surrogate</span><p class="muted">Shared information is a property of the pair. Neither stream contains it alone.</p></div>
+      <div class="cell"><b>Dynamic</b><span class="m">windowed entropy and integration over time</span><p class="muted">The measures move as coupling switches on, so adaptation can be tracked within a session.</p></div>
+      <div class="cell"><b>Multilevel</b><span class="m">neural ↔ attention, autonomic ↔ output</span><p class="muted">Layer pairs show where the coupling lives. Here it is clearest in autonomic ↔ output.</p></div>
+      <div class="cell"><b>Reciprocal</b><span class="m">next step: lagged AMI, transfer entropy</span><p class="muted">Shared information is symmetric. It shows coupling but not its direction, so one-way and mutual phases look alike here.</p></div>
+    </div>
+    <div class="panel">
+      <h3>Limits</h3>
+      <div class="prose muted" style="font-size:15px">
+        <p>Simulated data with chosen coupling strengths; the demo shows that the pipeline can see coupling, not how strong it is in real teams.</p>
+        <p>Mutual information is statistical dependence. It is not causal influence or information flow.</p>
+        <p>The pooling rule and the window length change the answer, so both should be treated as a sensitivity analysis, as in OP-TEMPO.</p>
+      </div>
+    </div>
+    <footer>
+      <p>Simulation, model and pipeline port built for this talk. Pipeline rules follow the OP-TEMPO pooled analysis (quartile symbols, seven pooling rules, 30-s windows, 200-s smoothing).</p>
+      <p>Xiaoyun Yin · Arizona State University</p>
+    </footer>
+  </section>
+</div>
+
+<script type="application/json" id="sim-data">{{DATA}}</script>
+<script type="application/json" id="lm-weights">{{WEIGHTS}}</script>
+<script>{{TINYLM}}</script>
+<script>{{PIPELINE}}</script>
+<script>{{APP}}</script>
+</body>
+</html>
